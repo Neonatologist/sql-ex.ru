@@ -1,0 +1,59 @@
+25. Найдите производителей принтеров, которые производят ПК с наименьшим объемом RAM и с самым быстрым процессором среди всех ПК, имеющих наименьший объем RAM. Вывести: Maker
+
+select distinct p.maker from product p join pc on p.model = pc.model where pc.ram = (select min(ram) from pc) and pc.speed = (SELECT MAX(speed) FROM pc WHERE ram = (SELECT MIN(ram) FROM pc)) and p.maker in (SELECT maker FROM product WHERE type = 'printer')
+
+26. Найдите среднюю цену ПК и ПК-блокнотов, выпущенных производителем A (латинская буква). Вывести: одна общая средняя цена.
+
+SELECT AVG(price) as Avg_price FROM (SELECT price
+FROM PC WHERE model IN (SELECT model FROM product WHERE maker='A' AND type='PC') UNION ALL SELECT price
+FROM Laptop
+WHERE model IN (SELECT model FROM product WHERE maker='A' AND
+type='Laptop')
+) AS prods
+
+27. Найдите средний размер диска ПК каждого из тех производителей, которые выпускают и принтеры. Вывести: maker, средний размер HD.
+
+SELECT p.maker, avg(pc.hd) from product p join pc pc on p.model = pc.model WHERE pc.model IN (SELECT model FROM pc) AND maker IN (
+SELECT maker FROM product WHERE type='printer') group by maker или select p.maker, avg(pc.hd) as avg_hd from product p join pc on p.model = pc.model where p.maker in (select maker from product where type = 'printer') group by p.maker
+
+28. Используя таблицу Product, определить количество производителей, выпускающих по одной модели.
+
+select count(maker) as qty from (SELECT distinct maker
+FROM product group by maker having count(model) = 1) AS prod или select distinct count(maker) as qty from product where maker in (Select maker from product group by maker having count(model) = 1)
+
+29. В предположении, что приход и расход денег на каждом пункте приема фиксируется не чаще одного раза в день [т.е. первичный ключ (пункт, дата)], написать запрос с выходными данными (пункт, дата, приход, расход). Использовать таблицы Income_o и Outcome_o.
+
+Select i.point, i.date, inc, out from income_o i left join outcome_o o on i.point = o.point and i.date = o.date
+union
+Select o.point, o.date, inc, out from income_o i right join outcome_o o on i.point = o.point and i.date = o.date
+
+30. В предположении, что приход и расход денег на каждом пункте приема фиксируется произвольное число раз (первичным ключом в таблицах является столбец code), требуется получить таблицу, в которой каждому пункту за каждую дату выполнения операций будет соответствовать одна строка.
+Вывод: point, date, суммарный расход пункта за день (out), суммарный приход пункта за день (inc). Отсутствующие значения считать неопределенными (NULL).
+
+select point, date, SUM(sum_out), SUM(sum_inc)
+from( select point, date, SUM(inc) as sum_inc, null as sum_out from Income Group by point, date
+Union
+select point, date, null as sum_inc, SUM(out) as sum_out from Outcome Group by point, date ) as t
+group by point, date order by point
+
+31. Для классов кораблей, калибр орудий которых не менее 16 дюймов, укажите класс и страну.
+
+Select class, country from classes where bore >= '16'
+
+32. Одной из характеристик корабля является половина куба калибра его главных орудий (mw). С точностью до 2 десятичных знаков определите среднее значение mw для кораблей каждой страны, у которой есть корабли в базе данных.
+
+Select country, cast(avg((power(bore,3)/2)) as numeric(6,2)) as weight
+from (select country, classes.class, bore, name from classes left join ships on classes.class=ships.class
+union all
+select distinct country, class, bore, ship from classes t1 left join outcomes t2 on t1.class=t2.ship
+where ship=class and ship not in (select name from ships) ) a
+where name!='null' group by country
+
+33. Укажите корабли, потопленные в сражениях в Северной Атлантике (North Atlantic). Вывод: ship.
+
+Select ship from outcomes where result = 'sunk' and battle = 'North Atlantic'
+
+34. По Вашингтонскому международному договору от начала 1922 г. запрещалось строить линейные корабли водоизмещением более 35 тыс.тонн. Укажите корабли, нарушившие этот договор (учитывать только корабли c известным годом спуска на воду). Вывести названия кораблей.
+
+Select distinct name from classes, ships where launched >=1922 and displacement>35000 and type='bb' and
+ships.class = classes.class
