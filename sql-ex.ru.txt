@@ -52,8 +52,3 @@ where name!='null' group by country
 33. Укажите корабли, потопленные в сражениях в Северной Атлантике (North Atlantic). Вывод: ship.
 
 Select ship from outcomes where result = 'sunk' and battle = 'North Atlantic'
-
-34. По Вашингтонскому международному договору от начала 1922 г. запрещалось строить линейные корабли водоизмещением более 35 тыс.тонн. Укажите корабли, нарушившие этот договор (учитывать только корабли c известным годом спуска на воду). Вывести названия кораблей.
-
-Select distinct name from classes, ships where launched >=1922 and displacement>35000 and type='bb' and
-ships.class = classes.class
